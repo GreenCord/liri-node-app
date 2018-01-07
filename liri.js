@@ -6,6 +6,57 @@ var Spotify = require('node-spotify-api');
 var omdb = require('omdb');
 var request = require('request');
 
+var Session = function(cmd,input,results){
+	this.cmd = cmd;
+	this.input = input;
+	this.results = results;
+	console.log('Session Created: ', this.cmd, this.input, this.results);
+};
+
+Session.prototype.save = function(toSave){
+	console.log('Saving log file: ', this.cmd, this.input/*, this.results*/);
+
+	fs.open('log.txt', 'ax', (err, fd) => {
+		if (err) {
+			if (err.code === 'EEXIST') {
+				console.log('Saving session...');
+				fs.appendFile('log.txt', '~~~'+JSON.stringify(toSave), function(err){
+					if (err) {
+						console.log('Error saving session: ' + err);
+					} else {
+						console.log('...session saved!');
+					}
+				});
+			} else {
+				console.log('Session log.txt does not exist.');
+				throw err;
+			}
+		} else {
+			fs.writeFile('log.txt', JSON.stringify(toSave), function(err){
+				if (err) throw err;
+			});
+		}
+	});
+};
+
+
+Session.prototype.print = function(){
+	console.log('This Session: \n', JSON.stringify(session,2,2));
+};
+
+Session.prototype.history = function(){
+	fs.readFile('log.txt', 'utf8', (err,fd) => {
+		if (err) throw err;
+		var historyArr = fd.split('~~~');
+		console.log(txt.separatorplain);
+		for (var i = 0; i < historyArr.length; i++) {
+			var item = JSON.parse(historyArr[i]);
+			console.log(item.cmd, item.input);
+			console.log(txt.separatorplain);
+				
+		}
+	});
+};
 
 var spotify = new Spotify(keys.spotify);
 var twitter = new Twitter(keys.twitter);
@@ -38,6 +89,8 @@ var txt = {
 	separatorplain: '-------------------------------------------------------------'
 };
 
+var session;
+
 var liri = {
 	cmd: process.argv[2],
 	input: '',
@@ -46,7 +99,12 @@ var liri = {
 			this.input += process.argv[i] + ' ';
 		}
 		this.input = this.input.trim();
+		this.createSession(this.cmd,this.input);
 		this.action();
+	},
+	createSession: function(cmd,input){
+		session = new Session(cmd,input,{});
+		session.print();
 	},
 	action: function() {
 		switch (this.cmd) {
@@ -65,6 +123,11 @@ var liri = {
 
 			case 'do-what-it-says':
 				this.rando();
+			break;
+
+			case 'history':
+				session = new Session();
+				session.history();
 			break;
 
 			default:
@@ -98,6 +161,10 @@ var liri = {
 					console.log(txt.separatorplain);
 				}
 				console.log(txt.separator);
+				console.log('Updating session.');
+				session.results = tweets;
+				// session.print();
+				session.save(session);
 			}
 		});
 
@@ -113,12 +180,19 @@ var liri = {
 		  } else {
 		  	console.log(txt.loaded.spotify + '\n' + txt.separator);
 		  	var spotted = data.tracks.items;
+		  	var spottedSession = [];
 		  	if (spotted.length < 1) {
 		  		console.log('No tracks for ' + arg + ' found. Sorry.');
 		  		console.log(txt.separator);
 		  	} else {
 			  	for (var i = 0; i < spotted.length; i++) {
-			  		// console.log(spotted[i]);
+			  		var result = {
+			  			album: spotted[i].album.name,
+			  			song: spotted[i].name,
+			  			artists: spotted[i].artists,
+			  			preview: spotted[i].preview_url
+			  		};
+			  		spottedSession.push(result);
 				  	console.log(txt.color.cyan + 'Album:       ' + txt.color.white + spotted[i].album.name);
 				  	console.log(txt.color.cyan + 'Song Name:   ' + txt.color.white + spotted[i].name);
 				  	for (var j = 0; j < spotted[i].album.artists.length; j++) {
@@ -128,18 +202,13 @@ var liri = {
 				  	console.log(txt.separator);
 			  	}
 			  }
+			  console.log('Updating session.');
+				session.results = spottedSession;
+				session.print();
 		  }
 		});
 	},
 	movie: function(arg){ 
-		//  * Title of the movie.
-	  //  * Year the movie came out.
-	  //  * IMDB Rating of the movie.
-	  //  * Rotten Tomatoes Rating of the movie.
-	  //  * Country where the movie was produced.
-	  //  * Language of the movie.
-	  //  * Plot of the movie.
-	  //  * Actors in the movie.
 		console.log(txt.loading.movie);
 		if ((!arg) || (arg == undefined)) {
 			arg = 'Mr. Nobody';
@@ -181,6 +250,9 @@ var liri = {
 				console.log(txt.separatorplain);
 				console.log(txt.color.white + body.Plot + txt.color.reset);
 				console.log(txt.separator);
+				console.log('Updating session.');
+				session.results = body;
+				session.print();
 			}
 		  
 		});
