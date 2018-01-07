@@ -2,6 +2,7 @@ require("dotenv").config();
 var keys = require ('./keys.js');
 var Twitter = require('twitter');
 var Spotify = require('node-spotify-api');
+var omdb = require('omdb');
 var request = require('request');
 
 
@@ -11,13 +12,16 @@ var twitter = new Twitter(keys.twitter);
 var txt = {
 	loading: {
 		tweets: ',.-~*` --==[[[ LOADING TWEETS ]]]==-- `*~-.,',
-		spotify: ',.-~*` --==[[[ SEARCHING SPOTIFY ]]]==-- `*~-.,'
+		spotify: ',.-~*` --==[[[ SEARCHING SPOTIFY ]]]==-- `*~-.,',
+		movie: ',.-~*` --==[[[ LOADING OMDB ]]]==-- `*~-.,'
 	},
 	loaded: {
 		tweets: '`*~-., --==[[[ TWEETS LOADED  ]]]==-- ,.-~*`',
-		spotify: '`*~-., --==[[[ SPOTIFY SEARCHED  ]]]==-- ,.-~*`'
+		spotify: '`*~-., --==[[[ SPOTIFY SEARCHED  ]]]==-- ,.-~*`',
+		movie: ',.-~*` --==[[[ OMDB LOADED  ]]]==-- `*~-.,'
 	},
-	separator: '~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~'
+	separator: '~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~',
+	separatorplain: '-------------------------------------------------------------'
 };
 
 var liri = {
@@ -25,11 +29,9 @@ var liri = {
 	input: '',
 	init: function() {
 		for (var i = 3; i < process.argv.length; i++) {
-			if (i < process.argv.length) 
-			{ this.input += process.argv[i] + ' '; }
-			else
-			{ this.input += process.argv[i]; }
+			this.input += process.argv[i] + ' ';
 		}
+		this.input = this.input.trim();
 		this.action();
 	},
 	action: function() {
@@ -72,7 +74,6 @@ var liri = {
 	},
 	spotify: function(arg){ 
 		console.log(txt.loading.spotify);
-		arg = arg.trim();
 		if ((!arg) || (arg == undefined)) {
 			arg = 'The Sign';
 		}
@@ -82,7 +83,7 @@ var liri = {
 		  } else {
 		  	console.log(txt.loaded.spotify + '\n' + txt.separator);
 		  	var spotted = data.tracks.items;
-		  	if (spotted.length === 0) {
+		  	if (spotted.length < 1) {
 		  		console.log('No tracks for ' + arg + ' found. Sorry.');
 		  		console.log(txt.separator);
 		  	} else {
@@ -100,7 +101,58 @@ var liri = {
 		  }
 		});
 	},
-	movie: function(arg){ console.log('Run "movie-this"...', arg); },
+	movie: function(arg){ 
+		//  * Title of the movie.
+	  //  * Year the movie came out.
+	  //  * IMDB Rating of the movie.
+	  //  * Rotten Tomatoes Rating of the movie.
+	  //  * Country where the movie was produced.
+	  //  * Language of the movie.
+	  //  * Plot of the movie.
+	  //  * Actors in the movie.
+		console.log(txt.loading.movie);
+		if ((!arg) || (arg == undefined)) {
+			arg = 'Mr. Nobody';
+		}
+		var queryUrl = 'http://www.omdbapi.com/?apikey=trilogy&t=' + encodeURIComponent(arg);
+		// console.log(queryUrl);
+		request(queryUrl, function(error, response, body){
+			body = JSON.parse(body);
+			if ((error) || body.Response == 'False') {
+				if (error) {
+					console.log('Error occurred: ' + error);
+				} else {
+					console.log('Error occurred: ' + body.Error);
+				}
+			} else {
+				console.log(txt.loaded.movie);
+				var ratingsImdb;
+				var ratingsRotten;
+				if (body.Ratings[0]) {
+					ratingsImdb = body.Ratings[0].Value;
+				} else {
+					ratingsImdb = 'Not Rated';
+				}
+				if (body.Ratings[1]) {
+					ratingsRotten = body.Ratings[1].Value;
+				} else {
+					ratingsRotten = 'Not Rated';
+				}
+				console.log(txt.separator);
+				// console.log('body:', body);
+				console.log(body.Title + ' (' + body.Year + ', ' + body.Country + ')' + ' | IMDB Rating ['+ ratingsImdb +']' + ' | Rotten Tomatoes ['+ ratingsRotten +']');
+				console.log(body.Language);
+				console.log(txt.separatorplain);
+				console.log(body.Actors);
+				console.log(txt.separatorplain);
+				console.log(body.Plot);
+				console.log(txt.separator);
+			}
+		  
+		});
+		
+
+	},
 	rando: function(arg){ console.log('Run "do-what-it-says"...'); }
 };
 var doLiri = liri.init;
