@@ -41,7 +41,7 @@ LIRI knows a small number of commands:
 
 **Example:** ```node liri.js my-tweets```
 
-**Description:** LIRI will retrieve and display up to 10 recent Tweets made by @hidden_ocean_18.
+**Description:** LIRI will retrieve and display up to 10 recent Tweets made by [@hidden_ocean_18](https://twitter.com/hidden_ocean_18).
 
 ### spotify-this-song
 
