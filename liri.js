@@ -5,89 +5,11 @@ var Twitter = require('twitter');
 var Spotify = require('node-spotify-api');
 var omdb = require('omdb');
 var request = require('request');
-
-var Session = function(cmd,input,results){
-	this.cmd = cmd;
-	this.input = input;
-	this.results = results;
-	console.log('Session Created: ', this.cmd, this.input, this.results);
-};
-
-Session.prototype.save = function(toSave){
-	console.log('Saving log file: ', this.cmd, this.input/*, this.results*/);
-
-	fs.open('log.txt', 'ax', (err, fd) => {
-		if (err) {
-			if (err.code === 'EEXIST') {
-				console.log('Saving session...');
-				fs.appendFile('log.txt', '~~~'+JSON.stringify(toSave), function(err){
-					if (err) {
-						console.log('Error saving session: ' + err);
-					} else {
-						console.log('...session saved!');
-					}
-				});
-			} else {
-				console.log('Session log.txt does not exist.');
-				throw err;
-			}
-		} else {
-			fs.writeFile('log.txt', JSON.stringify(toSave), function(err){
-				if (err) throw err;
-			});
-		}
-	});
-};
-
-
-Session.prototype.print = function(){
-	console.log('This Session: \n', JSON.stringify(session,2,2));
-};
-
-Session.prototype.history = function(){
-	fs.readFile('log.txt', 'utf8', (err,fd) => {
-		if (err) throw err;
-		var historyArr = fd.split('~~~');
-		console.log(txt.separatorplain);
-		for (var i = 0; i < historyArr.length; i++) {
-			var item = JSON.parse(historyArr[i]);
-			console.log(item.cmd, item.input);
-			console.log(txt.separatorplain);
-				
-		}
-	});
-};
-
+var Session = require('./session.js');
+var txt = require('./text.js');
 var spotify = new Spotify(keys.spotify);
 var twitter = new Twitter(keys.twitter);
 
-var txt = {
-	color: {
-		blue: '\x1b[1m\x1b[34m',
-		cyan: '\x1b[1m\x1b[36m',
-		cyandim: '\x1b[2m\x1b[36m',
-		green: '\x1b[1m\x1b[32m',
-		red: '\x1b[1m\x1b[31m',
-		reset: '\x1b[0m',
-		yellow: '\x1b[1m\x1b[33m',
-		white: '\x1b[1m\x1b[37m',
-		whitedim: '\x1b[2m\x1b[37m'
-	},
-	loading: {
-		tweets: ',.-~*` --==[[[\x1b[1m\x1b[33m LOADING TWEETS \x1b[0m]]]==-- `*~-.,',
-		spotify: ',.-~*` --==[[[\x1b[1m\x1b[33m SEARCHING SPOTIFY \x1b[0m]]]==-- `*~-.,',
-		movie: ',.-~*` --==[[[\x1b[1m\x1b[33m SEARCHING OMDB \x1b[0m]]]==-- `*~-.,',
-		do: ',.-~*` --==[[[\x1b[1m\x1b[33m DOING WHAT IT SAYS \x1b[0m]]]==-- `*~-.,'
-	},
-	loaded: {
-		tweets: '`*~-., --==[[[\x1b[1m\x1b[32m TWEETS LOADED  \x1b[0m]]]==-- ,.-~*`',
-		spotify: '`*~-., --==[[[\x1b[1m\x1b[32m SPOTIFY SEARCHED  \x1b[0m]]]==-- ,.-~*`',
-		movie: '`*~-., --==[[[\x1b[1m\x1b[32m OMDB SEARCHED  \x1b[0m]]]==-- ,.-~*`',
-		do: '`*~-., --==[[[\x1b[1m\x1b[32m  DOING THE THING   \x1b[0m]]]==-- ,.-~*`'
-	},
-	separator: '~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~^~',
-	separatorplain: '-------------------------------------------------------------'
-};
 
 var session;
 
@@ -104,7 +26,7 @@ var liri = {
 	},
 	createSession: function(cmd,input){
 		session = new Session(cmd,input,{});
-		session.print();
+		// session.print();
 	},
 	action: function() {
 		switch (this.cmd) {
@@ -127,7 +49,7 @@ var liri = {
 
 			case 'history':
 				session = new Session();
-				session.history();
+				session.history(this.input);
 			break;
 
 			default:
@@ -138,6 +60,7 @@ var liri = {
 				console.log(txt.color.green + 'spotify-this-song' + txt.color.cyan + ' song name' + txt.color.reset + ' - Check spotify for a song.');
 				console.log(txt.color.green + 'movie-this' + txt.color.cyan + ' movie name' + txt.color.reset + ' - Check OMDB for info about a movie.');
 				console.log(txt.color.green + 'do-what-it-says' + txt.color.reset + ' - If you feel lucky.');
+				console.log(txt.color.green + 'history' + txt.color.cyan + txt.color.reset + txt.color.cyandim + ' [verbose]' + txt.color.reset + ' - See your LIRI search history. Use "history verbose" to list results.');
 				console.log(txt.separatorplain);
 				console.log(txt.separator);
 		} // end switch
@@ -163,7 +86,6 @@ var liri = {
 				console.log(txt.separator);
 				console.log('Updating session.');
 				session.results = tweets;
-				// session.print();
 				session.save(session);
 			}
 		});
@@ -204,7 +126,7 @@ var liri = {
 			  }
 			  console.log('Updating session.');
 				session.results = spottedSession;
-				session.print();
+				session.save(session);
 		  }
 		});
 	},
@@ -252,7 +174,7 @@ var liri = {
 				console.log(txt.separator);
 				console.log('Updating session.');
 				session.results = body;
-				session.print();
+				session.save(session);
 			}
 		  
 		});
