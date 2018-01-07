@@ -72,6 +72,7 @@ var liri = {
 	},
 	spotify: function(arg){ 
 		console.log(txt.loading.spotify);
+		arg = arg.trim();
 		if ((!arg) || (arg == undefined)) {
 			arg = 'The Sign';
 		}
@@ -81,18 +82,21 @@ var liri = {
 		  } else {
 		  	console.log(txt.loaded.spotify + '\n' + txt.separator);
 		  	var spotted = data.tracks.items;
-		  	for (var i = 0; i < spotted.length; i++) {
-		  		// console.log(spotted[i]);
-			  	console.log('Album:       ' + spotted[i].album.name);
-			  	console.log('Song Name:   ' + spotted[i].name);
-			  	for (var j = 0; j < spotted[i].album.artists.length; j++) {
-			  		console.log('Artist:      ' + spotted[i].album.artists[j].name);
+		  	if (spotted.length === 0) {
+		  		console.log('No tracks for ' + arg + ' found. Sorry.');
+		  		console.log(txt.separator);
+		  	} else {
+			  	for (var i = 0; i < spotted.length; i++) {
+			  		// console.log(spotted[i]);
+				  	console.log('Album:       ' + spotted[i].album.name);
+				  	console.log('Song Name:   ' + spotted[i].name);
+				  	for (var j = 0; j < spotted[i].album.artists.length; j++) {
+				  		console.log('Artist:      ' + spotted[i].album.artists[j].name);
+				  	}
+				  	console.log('Preview URL: ' + spotted[i].preview_url);
+				  	console.log(txt.separator);
 			  	}
-			  	console.log('Preview URL: ' + spotted[i].preview_url);
-			  	console.log(txt.separator);
-		  	}
-		  	
-		  	
+			  }
 		  }
 		});
 	},
