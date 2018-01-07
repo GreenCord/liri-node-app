@@ -87,7 +87,13 @@ var liri = {
 				console.log(txt.loaded.tweets);
 				console.log(txt.separator);
 				console.log(txt.separatorplain);
-				for (var i = 0; i < tweets.length; i++) {
+				var tweetlength;
+				if (tweets.length <= 10) {
+					tweetlength = tweets.length;
+				} else {
+					tweetlength = 10;
+				}
+				for (var i = 0; i < tweetlength; i++) {
 					console.log(txt.color.cyan + tweets[i].created_at + txt.color.white + '\n' + tweets[i].text + txt.color.reset);
 					console.log(txt.separatorplain);
 				}
