@@ -8,13 +8,10 @@
 1. Run ```npm install``` to get required packages.
 1. You will need to provide your own ```.env``` file with Twitter and Spotify API keys.
 	```
-	# Spotify API keys
-
+	# Spotify API keys (replace with your key/secret)
 	SPOTIFY_ID=your-spotify-id
 	SPOTIFY_SECRET=your-spotify-secret
-
-	# Twitter API keys
-
+	# Twitter API keys (replace with your keys/secrets)
 	TWITTER_CONSUMER_KEY=your-twitter-consumer-key
 	TWITTER_CONSUMER_SECRET=your-twitter-consumer-secret
 	TWITTER_ACCESS_TOKEN_KEY=your-access-token-key
